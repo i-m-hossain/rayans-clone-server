@@ -26,13 +26,24 @@ async function run() {
     const productsCollection = database.collection("products");
     // create a document to insert
 
+    /** 
+    * Get api
+    */
+    const get_api = (uri, collection) => {
+      app.get(`${uri}`, async (req, res) => {
+        const cursor = collection.find({});
+        const result = await cursor.toArray()
+        res.json(result)
+      })
+    }
+
     /**
     * Post api
     */
     const post_api = (uri, collection) => {
       app.post(`${uri}`, async (req, res) => {
         let document = req.body
-        if (req.files) {
+        if (req?.files?.image) {
           const imageData = req.files.image.data
           const encoded = imageData.toString('base64');
           const image = Buffer.from(encoded, 'base64')
@@ -44,8 +55,9 @@ async function run() {
         res.json(result)
       })
     }
-
+    get_api('/products', productsCollection)
     post_api('/products', productsCollection)
+
 
 
   } finally {
@@ -54,14 +66,7 @@ async function run() {
 }
 run().catch(console.dir);
 
-/** 
-* Get api
-*/
-const get_api = (url) => {
-  app.get(`/${url}`, (req, res) => {
-    res.send('Hello World!')
-  })
-}
+
 
 /**
 * Test Connection
