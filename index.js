@@ -1,5 +1,6 @@
 const express = require('express')
 const { MongoClient } = require('mongodb');
+const fileUpload = require('express-fileupload');
 var cors = require('cors')
 require('dotenv').config()
 const app = express()
@@ -10,6 +11,7 @@ const port = 5000
 */
 app.use(cors())
 app.use(express.json())
+app.use(fileUpload());
 
 /**  
 * mongodb credentials
@@ -29,10 +31,17 @@ async function run() {
     */
     const post_api = (uri, collection) => {
       app.post(`${uri}`, async (req, res) => {
-        const document = req.body
+        let document = req.body
+        if (req.files) {
+          const imageData = req.files.image.data
+          const encoded = imageData.toString('base64');
+          const image = Buffer.from(encoded, 'base64')
+          document = {
+            ...document, image
+          }
+        }
         const result = await collection.insertOne(document)
         res.json(result)
-        console.log('success')
       })
     }
 
