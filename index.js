@@ -1,6 +1,7 @@
 const express = require('express')
 const { MongoClient } = require('mongodb');
 const fileUpload = require('express-fileupload');
+const ObjectId = require('mongodb').ObjectId;
 var cors = require('cors')
 require('dotenv').config()
 const app = express()
@@ -24,15 +25,39 @@ async function run() {
     await client.connect();
     const database = client.db("ryans_clone");
     const productsCollection = database.collection("products");
-    // create a document to insert
+    const usersCollection = database.collection("users");
 
     /** 
     * Get api
     */
     const get_api = (uri, collection) => {
       app.get(`${uri}`, async (req, res) => {
-        const cursor = collection.find({});
+        let query = {}
+        const cursor = collection.find(query);
         const result = await cursor.toArray()
+        res.json(result)
+
+      })
+    }
+    /** 
+    * Get api query
+    */
+    const get_api_query = (uri, collection) => {
+      app.get(`${uri}`, async (req, res) => {
+        const email = req?.query?.email
+        let query = { email, email }
+        const result = await collection.findOne(query);
+        res.json({ role: result.role })
+      })
+    }
+    /** 
+    * Get api single
+    */
+    const get_api_single = (uri, collection) => {
+      app.get(`${uri}`, async (req, res) => {
+        const documentId = req?.params?.id
+        const query = { _id: ObjectId(documentId) }
+        const result = await collection.findOne(query);
         res.json(result)
       })
     }
@@ -52,11 +77,50 @@ async function run() {
           }
         }
         const result = await collection.insertOne(document)
+
         res.json(result)
       })
     }
+    /* *
+    * Delete API
+    */
+    const delete_api = (uri, collection) => {
+      app.delete(`${uri}`, async (req, res) => {
+        const documentId = req?.params?.id
+        const query = { _id: ObjectId(documentId) }
+        const result = await collection.deleteOne(query);
+        res.json(result)
+      })
+    }
+    /**
+    * Put api
+    */
+    // const put_api = (uri, collection) => {
+    //   app.post(`${uri}`, async (req, res) => {
+    //     let document = req.body
+    //     if (req?.files?.image) {
+    //       const imageData = req.files.image.data
+    //       const encoded = imageData.toString('base64');
+    //       const image = Buffer.from(encoded, 'base64')
+    //       document = {
+    //         ...document, image
+    //       }
+    //     }
+    //     const result = await collection.insertOne(document)
+    //     res.json(result)
+    //   })
+    // }
+
+    // products api
     get_api('/products', productsCollection)
+    get_api_single('/products/:id', productsCollection)
     post_api('/products', productsCollection)
+    delete_api('/products/:id', productsCollection)
+
+    // users api
+    post_api('/users', usersCollection)
+    get_api_query('/users/role', usersCollection)
+    // put_api('/products', productsCollection)
 
 
 
