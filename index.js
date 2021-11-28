@@ -47,7 +47,7 @@ async function run() {
         const email = req?.query?.email
         let query = { email, email }
         const result = await collection.findOne(query);
-        res.json({ role: result.role })
+        res.json({ role: result?.role })
       })
     }
     /** 
@@ -92,21 +92,55 @@ async function run() {
         res.json(result)
       })
     }
-    /**
-    * Put api
+    /* *
+    * Put api products
     */
-    // const put_api = (uri, collection) => {
-    //   app.post(`${uri}`, async (req, res) => {
-    //     let document = req.body
-    //     if (req?.files?.image) {
-    //       const imageData = req.files.image.data
-    //       const encoded = imageData.toString('base64');
-    //       const image = Buffer.from(encoded, 'base64')
-    //       document = {
-    //         ...document, image
-    //       }
-    //     }
-    //     const result = await collection.insertOne(document)
+    const put_api = (uri, collection) => {
+      app.put(`${uri}`, async (req, res) => {
+        console.log('i got hit')
+        const documentId = req?.params?.id
+        let document = req.body
+        if (req?.files?.image) {
+          const imageData = req.files.image.data
+          const encoded = imageData.toString('base64');
+          const image = Buffer.from(encoded, 'base64')
+          document = {
+            ...document, image
+          }
+        }
+        const filter = { _id: ObjectId(documentId) }
+        const options = { upsert: true };
+        const updateDoc = {
+          $set: {
+            title: document.title,
+            image: document.image,
+            price: document.price,
+            short_des: document.short_des
+          },
+        };
+        const result = await collection.updateOne(filter, updateDoc, options)
+        res.json(result)
+      })
+    }
+    /* *
+      * Put api user
+      */
+    // const put_api_user = (uri, collection) => {
+    //   app.put(`${uri}`, async (req, res) => {
+    //     console.log('I got hit')
+    //     const userEmail = req?.query?.email
+    //     let user = req.body
+    //     const query = { email: userEmail }
+    //     const userFromDB = await collection.findOne(query)
+    //     const options = { upsert: true };
+    //     const updateDoc = {
+    //       $set: {
+    //         displayName: user.displayName,
+    //         email: user.email,
+    //         role: userFromDB?.role === 'admin' ? 'admin' : 'user',
+    //       },
+    //     };
+    //     const result = await collection.updateOne(query, updateDoc, options)
     //     res.json(result)
     //   })
     // }
@@ -115,12 +149,15 @@ async function run() {
     get_api('/products', productsCollection)
     get_api_single('/products/:id', productsCollection)
     post_api('/products', productsCollection)
+    put_api('/products/:id', productsCollection)
     delete_api('/products/:id', productsCollection)
 
     // users api
-    post_api('/users', usersCollection)
+    // put_api_user('/users', usersCollection)
+    post_api('/users', usersCollection) //add user to the database
     get_api_query('/users/role', usersCollection)
-    // put_api('/products', productsCollection)
+
+
 
 
 
