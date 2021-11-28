@@ -109,7 +109,6 @@ async function run() {
           }
         }
         const filter = { _id: ObjectId(documentId) }
-        const options = { upsert: true };
         const updateDoc = {
           $set: {
             title: document.title,
@@ -118,44 +117,45 @@ async function run() {
             short_des: document.short_des
           },
         };
-        const result = await collection.updateOne(filter, updateDoc, options)
+        const result = await collection.updateOne(filter, updateDoc)
         res.json(result)
       })
     }
     /* *
       * Put api user
       */
-    // const put_api_user = (uri, collection) => {
-    //   app.put(`${uri}`, async (req, res) => {
-    //     console.log('I got hit')
-    //     const userEmail = req?.query?.email
-    //     let user = req.body
-    //     const query = { email: userEmail }
-    //     const userFromDB = await collection.findOne(query)
-    //     const options = { upsert: true };
-    //     const updateDoc = {
-    //       $set: {
-    //         displayName: user.displayName,
-    //         email: user.email,
-    //         role: userFromDB?.role === 'admin' ? 'admin' : 'user',
-    //       },
-    //     };
-    //     const result = await collection.updateOne(query, updateDoc, options)
-    //     res.json(result)
-    //   })
-    // }
+    const put_api_user = (uri, collection) => {
+      app.put(`${uri}`, async (req, res) => {
+        const requester = req?.query?.requester
+        console.log(requester)
+        let newUser = req.body
+        const query = { email: newUser.email }
+        const user = await collection.findOne(query)
+        if (user) {
+          const updateDoc = {
+            $set: {
+              role: newUser.role,
+            },
+          };
+          const result = await collection.updateOne(query, updateDoc)
+          res.json(result)
+        }
+      })
+    }
 
     // products api
     get_api('/products', productsCollection)
     get_api_single('/products/:id', productsCollection)
-    post_api('/products', productsCollection)
-    put_api('/products/:id', productsCollection)
-    delete_api('/products/:id', productsCollection)
+    post_api('/products', productsCollection) //add product
+    put_api('/products/:id', productsCollection) //edit product
+    delete_api('/products/:id', productsCollection) //delete product
 
     // users api
-    // put_api_user('/users', usersCollection)
+
+    get_api('/users', usersCollection) //get all the users
     post_api('/users', usersCollection) //add user to the database
-    get_api_query('/users/role', usersCollection)
+    get_api_query('/users/role', usersCollection) //determing the user role
+    put_api_user('/users', usersCollection) // user role update
 
 
 
