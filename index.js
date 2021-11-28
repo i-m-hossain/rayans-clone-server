@@ -142,6 +142,23 @@ async function run() {
         }
       })
     }
+    /* *
+    * post api users
+    */
+    const post_api_users = (uri, collection) => {
+      app.post(`${uri}`, async (req, res) => {
+        let newUser = req.body
+        const query = { email: newUser.email }
+        const user = await collection.findOne(query)
+        if (!user) {
+          newUser = { ...newUser, role: "user" }
+          const result = await collection.insertOne(newUser)
+          res.json(result)
+        } else {
+          res.json({ info: 'user already exist' })
+        }
+      })
+    }
 
     // products api
     get_api('/products', productsCollection)
@@ -153,9 +170,10 @@ async function run() {
     // users api
 
     get_api('/users', usersCollection) //get all the users
-    post_api('/users', usersCollection) //add user to the database
-    get_api_query('/users/role', usersCollection) //determing the user role
+    post_api_users('/users', usersCollection) //add user to the database
+    get_api_query('/users/role', usersCollection) //determining the user role
     put_api_user('/users', usersCollection) // user role update
+    delete_api('/users/:id', usersCollection) //delete product
 
 
 
