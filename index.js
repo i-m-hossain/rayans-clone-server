@@ -4,8 +4,9 @@ const fileUpload = require('express-fileupload');
 const ObjectId = require('mongodb').ObjectId;
 var cors = require('cors')
 require('dotenv').config()
+const stripe = require('stripe')(process.env.STRIPE_SECRET)
 const app = express()
-const port = 5000
+const port = process.env.PORT || 5000
 
 /** 
  * middleware
@@ -175,7 +176,33 @@ async function run() {
     put_api_user('/users', usersCollection) // user role update
     delete_api('/users/:id', usersCollection) //delete product
 
+    /* *
+    *Stripe payment
+    */
+    app.post('/create-payment-intent', async (req, res) => {
+      const paymentInfo = req.body;
+      const amount = paymentInfo.price * 100;
+      // Create a PaymentIntent with the order amount and currency
+      const paymentIntent = await stripe.paymentIntents.create({
+        currency: 'usd',
+        amount: amount,
+        payment_method_types: ['card']
+      });
+      res.json({ clientSecret: paymentIntent.client_secret })
 
+    })
+    app.put('/products/payment/:id', async (req, res) => {
+      const id = req.params.id;
+      const payment = req.body;
+      const filter = { _id: ObjectId(id) };
+      const updateDoc = {
+        $set: {
+          payment: payment
+        }
+      };
+      const result = await productsCollection.updateOne(filter, updateDoc);
+      res.json(result);
+    });
 
 
 
