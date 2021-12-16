@@ -17,6 +17,7 @@
     "express": "^4.17.1",
     "express-fileupload": "^1.2.1",
     "mongodb": "^4.2.0",
+    "react-slick": "^0.28.1",
     "stripe": "^8.191.0"
   }
 }

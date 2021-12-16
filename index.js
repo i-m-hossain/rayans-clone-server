@@ -27,6 +27,7 @@ async function run() {
     const database = client.db("ryans_clone");
     const productsCollection = database.collection("products");
     const usersCollection = database.collection("users");
+    const categoriesCollection = database.collection("categories");
 
     /** 
     * Get api
@@ -160,7 +161,6 @@ async function run() {
         }
       })
     }
-
     // products api
     get_api('/products', productsCollection)
     get_api_single('/products/:id', productsCollection)
@@ -168,7 +168,6 @@ async function run() {
     put_api('/products/:id', productsCollection) //edit product
     delete_api('/products/:id', productsCollection) //delete product
 
-    // users api
 
     get_api('/users', usersCollection) //get all the users
     post_api_users('/users', usersCollection) //add user to the database
@@ -176,6 +175,31 @@ async function run() {
     put_api_user('/users', usersCollection) // user role update
     delete_api('/users/:id', usersCollection) //delete product
 
+    // Categories api
+    post_api('/categories', categoriesCollection)
+    get_api('/categories', categoriesCollection)
+    get_api_single('/categories/:id', categoriesCollection)
+    delete_api('/categories/:id', categoriesCollection)
+    app.put('/categories/:id', async (req, res) => {
+      const cat_id = req.params.id
+      const cat_name = req.body.cat_name
+      const filter = { _id: ObjectId(cat_id) }
+      const updateDoc = {
+        $set: {
+          cat_name: cat_name
+        },
+      };
+      const result = await categoriesCollection.updateOne(filter, updateDoc);
+      res.json(result)
+
+    })
+    app.get('/productsByCategory', async (req, res) => {
+      const cat = req.query.q
+      const query = {category: cat}
+      const cursor = productsCollection.find(query);
+      const result = await cursor.toArray()
+      res.json(result)
+    })
     /* *
     *Stripe payment
     */
