@@ -28,6 +28,7 @@ async function run() {
     const productsCollection = database.collection("products");
     const usersCollection = database.collection("users");
     const categoriesCollection = database.collection("categories");
+    const ordersCollection = database.collection("orders");
 
     /** 
     * Get api
@@ -195,11 +196,24 @@ async function run() {
     })
     app.get('/productsByCategory', async (req, res) => {
       const cat = req.query.q
-      const query = {category: cat}
+      const query = { category: cat }
       const cursor = productsCollection.find(query);
       const result = await cursor.toArray()
       res.json(result)
     })
+
+    // orders api 
+
+    //user orders
+    app.get('/usersOrders/:email', async (req, res) => {
+      const email = req.params.email;
+      const query = { user: email };
+      const cursor = ordersCollection.find(query);
+      const orders = await cursor.toArray()
+      res.json(orders)
+    })
+
+    get_api('/orders', ordersCollection)
     /* *
     *Stripe payment
     */
@@ -215,20 +229,8 @@ async function run() {
       res.json({ clientSecret: paymentIntent.client_secret })
 
     })
-    app.put('/products/payment/:id', async (req, res) => {
-      const id = req.params.id;
-      const payment = req.body;
-      const filter = { _id: ObjectId(id) };
-      const updateDoc = {
-        $set: {
-          payment: payment
-        }
-      };
-      const result = await productsCollection.updateOne(filter, updateDoc);
-      res.json(result);
-    });
-
-
+    //saving the order data to order table in the database
+    post_api('/ordersWithPayment', ordersCollection)
 
   } finally {
     // await client.close();
