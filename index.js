@@ -212,8 +212,22 @@ async function run() {
       const orders = await cursor.toArray()
       res.json(orders)
     })
+    app.put('/orders/:id', async (req, res) => {
+      const orderId = req.params.id;
+      const orderStatus = req.body;
+      const filter = { _id: ObjectId(orderId) }
+      const options = { upsert: true };
+      const updateDoc = {
+        $set: {
+          status: orderStatus.status
+        },
+      };
+      const result = await ordersCollection.updateOne(filter, updateDoc, options);
+      res.json(result)
 
+    })
     get_api('/orders', ordersCollection)
+    delete_api('/orders/:id', ordersCollection) //cancel order
     /* *
     *Stripe payment
     */
